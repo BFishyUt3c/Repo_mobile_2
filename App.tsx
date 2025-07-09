@@ -1,20 +1,39 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import MainTabs from './src/navigation/MainTabs';
+import AuthStack from './src/navigation/AuthStack';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { UserProvider } from './src/contexts/UserContext';
+import { ActivityIndicator, View } from 'react-native';
+
+const Root = () => {
+  const { token, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      {token ? (
+        <UserProvider>
+          <MainTabs />
+        </UserProvider>
+      ) : (
+        <AuthStack />
+      )}
+    </NavigationContainer>
+  );
+};
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthProvider>
+      <Root />
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
