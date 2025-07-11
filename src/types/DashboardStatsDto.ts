@@ -4,7 +4,7 @@ export interface DashboardStatsDto {
   totalExchanges: number;
   totalDonations: number;
   totalCommunities: number;
-  wasteAvoided: number; // en kg
+  wasteAvoided: number; 
   growthPercentage: number;
   activeUsers: number;
 }

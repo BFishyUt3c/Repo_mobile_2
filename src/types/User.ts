@@ -8,6 +8,7 @@ export interface User {
   email: string;
   address: string;
   description: string;
+  avatarUrl?: string; 
   joinedAt: string;
   points: number;
   level: string;

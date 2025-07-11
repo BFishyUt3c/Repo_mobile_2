@@ -13,12 +13,19 @@ export const colors = {
   black: '#222',
   gray: '#888',
   lightGray: '#eee',
+  textSecondary: '#666',
+  danger: '#f44336',
+  border: '#ddd',
+  lightGreen: '#e8f5e9',
+  shadow: '#000',
+  primaryText: '#222',
 };
 
 // Tipografía base
 export const fonts = {
   regular: 'System',
   bold: 'System',
+  medium: 'System',
   // Puedes agregar fuentes personalizadas si las usas en Expo
 };
 
@@ -28,6 +35,8 @@ export const fontSizes = {
   subtitle: 18,
   body: 15,
   small: 12,
+  sm: 12,
+  xl: 20,
 };
 
 // Espaciados
@@ -37,6 +46,7 @@ export const spacing = {
   md: 16,
   lg: 24,
   xl: 32,
+  xxl: 48,
 };
 
 // Bordes
@@ -50,7 +60,7 @@ export const borderRadius = {
 export const shadow = {
   shadowColor: colors.black,
   shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
+  shadowOpacity: 0.08, // más suave, como en web
+  shadowRadius: 8,
+  elevation: 4,
 }; 

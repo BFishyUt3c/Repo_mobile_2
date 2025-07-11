@@ -1,7 +1,8 @@
 import { apiClient } from '../config/apiClient';
-import { CommunityResponseDto, CommunitySummaryDto, CommunitySearchDto } from '../types/community';
+import { CommunityResponseDto, CommunitySummaryDto } from '../types/community';
+import Constants from 'expo-constants';
 
-const BASE_URL = 'http://192.168.0.11:8081/api/communities';
+const BASE_URL = `${Constants.expoConfig?.extra?.API_URL}/api/communities`;
 
 export const communityService = {
   // Obtener todas las comunidades
@@ -17,56 +18,103 @@ export const communityService = {
   },
 
   // Obtener comunidad por ID
-  getCommunityById: async (id: number): Promise<CommunityResponseDto> => {
-    const response = await apiClient.get(`${BASE_URL}/${id}`);
+  getCommunityById: async (communityId: number): Promise<CommunityResponseDto> => {
+    const response = await apiClient.get(`${BASE_URL}/${communityId}`);
+    return response.data;
+  },
+
+  // Crear nueva comunidad
+  createCommunity: async (communityData: any): Promise<CommunityResponseDto> => {
+    const response = await apiClient.post(`${BASE_URL}`, communityData);
+    return response.data;
+  },
+
+  // Actualizar comunidad
+  updateCommunity: async (communityId: number, communityData: any): Promise<CommunityResponseDto> => {
+    const response = await apiClient.put(`${BASE_URL}/${communityId}`, communityData);
+    return response.data;
+  },
+
+  // Eliminar comunidad
+  deleteCommunity: async (communityId: number): Promise<void> => {
+    await apiClient.delete(`${BASE_URL}/${communityId}`);
+  },
+
+  // Unirse a una comunidad
+  joinCommunity: async (communityId: number): Promise<void> => {
+    await apiClient.post(`${BASE_URL}/${communityId}/join`);
+  },
+
+  // Salir de una comunidad
+  leaveCommunity: async (communityId: number): Promise<void> => {
+    await apiClient.post(`${BASE_URL}/${communityId}/leave`);
+  },
+
+  // Verificar membresía
+  checkMembership: async (communityId: number): Promise<boolean> => {
+    const response = await apiClient.get(`${BASE_URL}/${communityId}/membership`);
     return response.data;
   },
 
   // Buscar comunidades
-  searchCommunities: async (searchDto: CommunitySearchDto): Promise<CommunityResponseDto[]> => {
-    const params = new URLSearchParams();
-    if (searchDto.name) params.append('name', searchDto.name);
-    if (searchDto.location) params.append('location', searchDto.location);
-    if (searchDto.minMembers) params.append('minMembers', searchDto.minMembers.toString());
-    if (searchDto.maxMembers) params.append('maxMembers', searchDto.maxMembers.toString());
-    
-    const response = await apiClient.get(`${BASE_URL}/search?${params.toString()}`);
+  searchCommunities: async (params: {
+    name?: string;
+    location?: string;
+    minMembers?: number;
+    maxMembers?: number;
+  }): Promise<CommunityResponseDto[]> => {
+    const queryParams = new URLSearchParams();
+    if (params.name) queryParams.append('name', params.name);
+    if (params.location) queryParams.append('location', params.location);
+    if (params.minMembers) queryParams.append('minMembers', params.minMembers.toString());
+    if (params.maxMembers) queryParams.append('maxMembers', params.maxMembers.toString());
+
+    const response = await apiClient.get(`${BASE_URL}/search?${queryParams}`);
     return response.data;
   },
 
   // Obtener comunidades populares
-  getPopularCommunities: async (limit: number = 10): Promise<CommunitySummaryDto[]> => {
+  getPopularCommunities: async (limit: number = 10): Promise<CommunityResponseDto[]> => {
     const response = await apiClient.get(`${BASE_URL}/popular?limit=${limit}`);
     return response.data;
   },
 
   // Obtener comunidades recientes
-  getRecentCommunities: async (limit: number = 10): Promise<CommunitySummaryDto[]> => {
+  getRecentCommunities: async (limit: number = 10): Promise<CommunityResponseDto[]> => {
     const response = await apiClient.get(`${BASE_URL}/recent?limit=${limit}`);
     return response.data;
   },
 
-  // Unirse a una comunidad
-  joinCommunity: async (communityId: number): Promise<CommunityResponseDto> => {
-    const response = await apiClient.post(`${BASE_URL}/${communityId}/join`);
+  // Obtener miembros de una comunidad
+  getCommunityMembers: async (communityId: number): Promise<any[]> => {
+    const response = await apiClient.get(`${BASE_URL}/${communityId}/members`);
     return response.data;
   },
 
-  // Abandonar una comunidad
-  leaveCommunity: async (communityId: number): Promise<CommunityResponseDto> => {
-    const response = await apiClient.post(`${BASE_URL}/${communityId}/leave`);
+  // Solicitar membresía (para comunidades privadas)
+  requestMembership: async (communityId: number, message?: string): Promise<any> => {
+    const response = await apiClient.post(`${BASE_URL}/${communityId}/request-membership`, {
+      message
+    });
     return response.data;
   },
 
-  // Verificar membresía
-  checkMembership: async (communityId: number): Promise<boolean> => {
-    const response = await apiClient.get(`${BASE_URL}/${communityId}/membership/check`);
+  // Obtener solicitudes de membresía pendientes
+  getPendingMembershipRequests: async (): Promise<any[]> => {
+    const response = await apiClient.get(`${BASE_URL}/membership-requests/pending`);
     return response.data;
   },
 
-  // Obtener estadísticas de la comunidad
-  getCommunityStats: async (communityId: number): Promise<any> => {
-    const response = await apiClient.get(`${BASE_URL}/${communityId}/stats`);
+  // Responder a solicitud de membresía
+  respondToMembershipRequest: async (
+    requestId: number, 
+    approved: boolean, 
+    responseMessage?: string
+  ): Promise<any> => {
+    const response = await apiClient.put(`/api/membership-requests/${requestId}/respond`, {
+      approved,
+      responseMessage
+    });
     return response.data;
   },
 }; 

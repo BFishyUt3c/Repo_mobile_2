@@ -1,13 +1,14 @@
 import { apiClient } from '../config/apiClient';
 import { ExchangeResponse, ExchangeRequest, ExchangeStatistics } from '../types/exchange';
 import { ProductResponseDto } from '../types/product';
+import Constants from 'expo-constants';
 
-const BASE_URL = 'http://192.168.0.11:8081/api/exchanges';
+const BASE_URL = `${Constants.expoConfig?.extra?.API_URL}/api/exchanges`;
 
 export const exchangeService = {
   // Solicitar un intercambio
   requestExchange: async (exchangeRequest: ExchangeRequest): Promise<ExchangeResponse> => {
-    const response = await apiClient.post(`${BASE_URL}`, exchangeRequest);
+    const response = await apiClient.post(`${BASE_URL}/request`, exchangeRequest);
     return response.data;
   },
 
@@ -47,16 +48,28 @@ export const exchangeService = {
     return response.data;
   },
 
+  // Obtener todos los intercambios del usuario
+  getUserExchanges: async (): Promise<ExchangeResponse[]> => {
+    const response = await apiClient.get(`${BASE_URL}/user`);
+    return response.data;
+  },
+
+  // Obtener intercambio por ID
+  getExchangeById: async (exchangeId: number): Promise<ExchangeResponse> => {
+    const response = await apiClient.get(`${BASE_URL}/${exchangeId}`);
+    return response.data;
+  },
+
   // Obtener productos disponibles para intercambio
-  getAvailableProductsForExchange: async (
+  getAvailableProducts: async (
     category?: string, 
     search?: string
   ): Promise<ProductResponseDto[]> => {
     const params = new URLSearchParams();
     if (category) params.append('category', category);
     if (search) params.append('search', search);
-    
-    const response = await apiClient.get(`${BASE_URL}/available-products?${params.toString()}`);
+
+    const response = await apiClient.get(`${BASE_URL}/available-products?${params}`);
     return response.data;
   },
 
@@ -69,6 +82,23 @@ export const exchangeService = {
   // Obtener estadísticas de intercambios
   getExchangeStatistics: async (): Promise<ExchangeStatistics> => {
     const response = await apiClient.get(`${BASE_URL}/statistics`);
+    return response.data;
+  },
+
+  // Verificar si un producto puede ser intercambiado
+  canProductBeExchanged: (product: ProductResponseDto): boolean => {
+    return product.availableForExchange && product.status === 'AVAILABLE';
+  },
+
+  // Buscar intercambios
+  searchExchanges: async (searchTerm: string): Promise<ExchangeResponse[]> => {
+    const response = await apiClient.get(`${BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+    return response.data;
+  },
+
+  // Obtener intercambios por estado
+  getExchangesByStatus: async (status: string): Promise<ExchangeResponse[]> => {
+    const response = await apiClient.get(`${BASE_URL}/status/${status}`);
     return response.data;
   },
 }; 

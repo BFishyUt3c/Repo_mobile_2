@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, fontSizes, borderRadius, spacing, shadow, fonts } from '../styles/theme';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen: React.FC = () => {

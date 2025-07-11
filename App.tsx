@@ -2,9 +2,11 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import MainTabs from './src/navigation/MainTabs';
 import AuthStack from './src/navigation/AuthStack';
-import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { AuthProvider } from './src/contexts/AuthContext';
 import { UserProvider } from './src/contexts/UserContext';
+import { WebSocketProvider } from './src/contexts/WebSocketContext';
 import { ActivityIndicator, View } from 'react-native';
+import { useAuth } from './src/hooks/useAuth';
 
 const Root = () => {
   const { token, loading } = useAuth();
@@ -33,7 +35,9 @@ const Root = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <Root />
+      <WebSocketProvider>
+        <Root />
+      </WebSocketProvider>
     </AuthProvider>
   );
 }

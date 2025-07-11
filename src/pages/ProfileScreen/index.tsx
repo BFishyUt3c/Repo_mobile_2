@@ -1,189 +1,271 @@
-import React, { useEffect } from 'react';
-import { View, Text, Button, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
-import { useUser } from '../../contexts/UserContext';
-import { useAuth } from '../../contexts/AuthContext';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../../hooks/useAuth';
+import { colors, fonts, fontSizes } from '../../styles/theme';
 import AvatarPlaceholder from '../../components/AvatarPlaceholder';
-import { colors, fontSizes, borderRadius, spacing, shadow, fonts } from '../../styles/theme';
+
+const Avatar = ({ name }: { name: string }) => (
+  <View style={styles.avatarContainer}>
+    <AvatarPlaceholder name={name} size={80} />
+    <View style={styles.editAvatarButton}>
+      <Ionicons name="camera" size={16} color={colors.white} />
+    </View>
+  </View>
+);
 
 const ProfileScreen: React.FC = () => {
-  const { user, loading, error, refreshUser } = useUser();
-  const { user: authUser, logout } = useAuth();
   const navigation = useNavigation();
+  const { user, logout } = useAuth();
 
-  useEffect(() => {
-    if (authUser?.id) {
-      refreshUser(authUser.id);
-    }
-  }, [authUser]);
-
-  if (loading) {
-    return <ActivityIndicator size="large" style={styles.centered} />;
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-        <Button title="Reintentar" onPress={() => authUser?.id && refreshUser(authUser.id)} />
-      </View>
+  const handleLogout = async () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que quieres cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cerrar Sesión', style: 'destructive', onPress: logout },
+      ]
     );
-  }
+  };
 
-  if (!user) {
-    return (
-      <View style={styles.centered}>
-        <Text>No se encontró el usuario.</Text>
+  const menuItems = [
+    {
+      title: 'Editar Perfil',
+      icon: 'person-outline',
+      onPress: () => navigation.navigate('EditProfile' as never),
+      color: colors.primary,
+    },
+    {
+      title: 'Mis Donaciones',
+      icon: 'gift-outline',
+      onPress: () => navigation.navigate('Donations' as never),
+      color: colors.success,
+    },
+    {
+      title: 'Mis Publicaciones',
+      icon: 'document-text-outline',
+      onPress: () => navigation.navigate('Posts' as never),
+      color: colors.accent,
+    },
+    {
+      title: 'Lista de Deseos',
+      icon: 'heart-outline',
+      onPress: () => navigation.navigate('Wishlist' as never),
+      color: colors.error,
+    },
+    {
+      title: 'Estadísticas',
+      icon: 'analytics-outline',
+      onPress: () => navigation.navigate('Statistics' as never),
+      color: colors.info,
+    },
+    {
+      title: 'Configuración',
+      icon: 'settings-outline',
+      onPress: () => navigation.navigate('Settings' as never),
+      color: colors.textSecondary,
+    },
+  ];
+
+  const renderMenuItem = (item: any, index: number) => (
+    <TouchableOpacity
+      key={index}
+      style={styles.menuItem}
+      onPress={item.onPress}
+    >
+      <View style={styles.menuItemContent}>
+        <View style={[styles.menuIcon, { backgroundColor: item.color }]}>
+          <Ionicons name={item.icon as any} size={20} color={colors.white} />
+        </View>
+        <Text style={styles.menuTitle}>{item.title}</Text>
       </View>
-    );
-  }
+      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+    </TouchableOpacity>
+  );
 
   return (
-    <View style={styles.container}>
-      {/* Avatar y nombre */}
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <AvatarPlaceholder name={user?.firstName || user?.email || ''} size={80} />
-        <Text style={styles.name}>{user.firstName} {user.lastName}</Text>
-        <Text style={styles.email}>{user.email}</Text>
-        <Text style={styles.level}>Nivel: {user.level} | Puntos: {user.points}</Text>
-      </View>
-
-      {/* Info adicional */}
-      <View style={styles.infoBox}>
-        <Text>Donados: {user.itemsDonated} | Intercambiados: {user.itemsExchanged}</Text>
-        <Text>Productos: {user.totalProductsCount} | Posts: {user.totalPostsCount}</Text>
-        <Text>Miembro desde: {user.joinedAt?.split('T')[0]}</Text>
-        <Text style={styles.description}>{user.description}</Text>
-      </View>
-
-      {/* Navegación a deseos y donaciones */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('WishlistScreen' as never)}>
-          <Text style={styles.actionText}>Mis deseos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('DonationsScreen' as never)}>
-          <Text style={styles.actionText}>Mis donaciones</Text>
+        <Text style={styles.title}>Mi Perfil</Text>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Ionicons name="log-out-outline" size={24} color={colors.error} />
         </TouchableOpacity>
       </View>
 
-      {/* Opcionales: editar perfil, configuración, cerrar sesión */}
-      <View style={styles.options}>
-        <Button title="Editar perfil" onPress={() => navigation.navigate('EditProfileScreen' as never)} />
-        <Button title="Configuración" onPress={() => navigation.navigate('SettingsScreen' as never)} />
-        <Button title="Cerrar sesión" color={colors.error} onPress={logout} />
-      </View>
-    </View>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.profileSection}>
+          <Avatar name={`${user?.firstName} ${user?.lastName}`} />
+          <View style={styles.profileInfo}>
+            <Text style={styles.userName}>{user?.firstName} {user?.lastName}</Text>
+            <Text style={styles.userEmail}>{user?.email}</Text>
+            <View style={styles.userStats}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{user?.points || 0}</Text>
+                <Text style={styles.statLabel}>Puntos</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{user?.level || 'Novato'}</Text>
+                <Text style={styles.statLabel}>Nivel</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{user?.itemsDonated || 0}</Text>
+                <Text style={styles.statLabel}>Donaciones</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Opciones</Text>
+          {menuItems.map(renderMenuItem)}
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.versionText}>GreenLoop v1.0.0</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.lg,
-    alignItems: 'center',
     backgroundColor: colors.background,
   },
-  centered: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: {
+    fontSize: fontSizes.title,
+    fontFamily: fonts.bold,
+    color: colors.primaryText,
+  },
+  logoutButton: {
+    padding: 8,
+  },
+  content: {
     flex: 1,
+  },
+  profileSection: {
+    alignItems: 'center',
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  editAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
+  profileInfo: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.primaryLight,
-    marginBottom: spacing.md,
-  },
-  avatarImg: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  avatarLetter: {
+  userName: {
     fontSize: fontSizes.title,
-    color: colors.white,
-    fontWeight: 'bold',
-  },
-  name: {
-    fontSize: fontSizes.subtitle,
-    color: colors.black,
-    fontWeight: 'bold',
     fontFamily: fonts.bold,
-    marginBottom: spacing.xs,
+    color: colors.primaryText,
+    marginBottom: 5,
   },
-  email: {
-    fontSize: fontSizes.body,
-    color: colors.gray,
+  userEmail: {
+    fontSize: fontSizes.subtitle,
     fontFamily: fonts.regular,
-    marginBottom: spacing.md,
+    color: colors.textSecondary,
+    marginBottom: 20,
   },
-  level: {
-    fontSize: fontSizes.small,
-    color: colors.success,
-    marginTop: spacing.xs,
-  },
-  infoBox: {
-    width: '100%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    ...shadow,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  description: {
-    marginTop: spacing.xs,
-    fontStyle: 'italic',
-    color: colors.gray,
-  },
-  actions: {
+  userStats: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: spacing.lg,
-  },
-  actionBtn: {
-    flex: 1,
-    backgroundColor: colors.success,
-    marginHorizontal: spacing.sm,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
     alignItems: 'center',
-    ...shadow,
   },
-  actionText: {
-    color: colors.white,
-    fontWeight: 'bold',
-    fontSize: fontSizes.body,
+  statItem: {
+    alignItems: 'center',
+    paddingHorizontal: 15,
   },
-  options: {
-    width: '100%',
-    marginTop: spacing.md,
-    gap: spacing.sm,
+  statValue: {
+    fontSize: fontSizes.subtitle,
+    fontFamily: fonts.bold,
+    color: colors.primary,
   },
-  errorText: {
-    color: colors.error,
-    marginBottom: spacing.md,
-    fontWeight: 'bold',
-    fontSize: fontSizes.body,
+  statLabel: {
+    fontSize: fontSizes.small,
+    fontFamily: fonts.regular,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
-  section: {
-    marginBottom: spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    ...shadow,
-    padding: spacing.md,
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: colors.border,
+  },
+  menuSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: fontSizes.body,
-    color: colors.primary,
-    fontWeight: 'bold',
+    fontSize: fontSizes.subtitle,
     fontFamily: fonts.bold,
-    marginBottom: spacing.sm,
+    color: colors.primaryText,
+    marginBottom: 15,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  menuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  menuTitle: {
+    fontSize: fontSizes.subtitle,
+    fontFamily: fonts.medium,
+    color: colors.primaryText,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  versionText: {
+    fontSize: fontSizes.small,
+    fontFamily: fonts.regular,
+    color: colors.textSecondary,
   },
 });
 

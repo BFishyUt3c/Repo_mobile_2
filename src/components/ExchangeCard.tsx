@@ -6,13 +6,27 @@ import { colors, fontSizes, borderRadius, spacing, shadow, fonts } from '../styl
 
 interface Props {
   exchange: ExchangeResponse;
+  isRequester?: boolean;
+  onPress?: () => void;
+  onAccept?: () => void;
+  onReject?: () => void;
+  onComplete?: () => void;
+  onCancel?: () => void;
 }
 
 function isValidImage(url?: string) {
   return !!url && url.startsWith('http') && url.length > 10;
 }
 
-const ExchangeCard: React.FC<Props> = ({ exchange }) => (
+const ExchangeCard: React.FC<Props> = ({ 
+  exchange, 
+  isRequester = false,
+  onPress,
+  onAccept,
+  onReject,
+  onComplete,
+  onCancel
+}) => (
   <View style={styles.card}>
     <View style={styles.header}>
       {isValidImage(exchange.requestedProductImage) ? (
@@ -24,6 +38,9 @@ const ExchangeCard: React.FC<Props> = ({ exchange }) => (
     </View>
     <Text style={styles.status}>{exchange.status}</Text>
     <Text style={styles.date}>{new Date(exchange.requestedAt).toLocaleDateString('es-ES')}</Text>
+    <Text style={styles.userInfo}>
+      {isRequester ? `Para: ${exchange.providerName}` : `De: ${exchange.requesterName}`}
+    </Text>
   </View>
 );
 
@@ -67,6 +84,12 @@ const styles = StyleSheet.create({
   date: {
     fontSize: fontSizes.small,
     color: colors.gray,
+  },
+  userInfo: {
+    fontSize: fontSizes.small,
+    color: colors.primary,
+    fontWeight: '600',
+    marginTop: spacing.xs,
   },
 });
 

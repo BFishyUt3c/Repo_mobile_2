@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fontSizes, borderRadius, spacing, shadow, fonts } from '../../styles/theme';
-import { useUser } from '../../contexts/UserContext';
+import { useUser } from '../../hooks/useUser';
 import { donationService } from '../../services/donationService';
 
 const TABS = ['Activas', 'Completadas', 'Canceladas'];

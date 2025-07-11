@@ -1,16 +1,16 @@
+import { apiClient } from '../config/apiClient';
 import { DashboardStatsDto } from '../types/DashboardStatsDto';
 import { RecentActivityDto } from '../types/RecentActivityDto';
+import Constants from 'expo-constants';
 
-const API_URL = 'http://192.168.0.11:8081/api/dashboard';
+const BASE_URL = `${Constants.expoConfig?.extra?.API_URL}/api/dashboard`;
 
 export async function getDashboardStats(): Promise<DashboardStatsDto> {
-  const res = await fetch(`${API_URL}/stats`);
-  if (!res.ok) throw new Error('Error al obtener estadísticas globales');
-  return res.json();
+  const response = await apiClient.get(`${BASE_URL}/stats`);
+  return response.data;
 }
 
 export async function getRecentActivity(limit = 10): Promise<RecentActivityDto[]> {
-  const res = await fetch(`${API_URL}/activity/recent?limit=${limit}`);
-  if (!res.ok) throw new Error('Error al obtener actividad reciente');
-  return res.json();
+  const response = await apiClient.get(`${BASE_URL}/activity/recent?limit=${limit}`);
+  return response.data;
 }

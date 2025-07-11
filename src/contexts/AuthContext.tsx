@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiClient } from '../config/apiClient';
 
 interface AuthContextProps {
   user: any;
@@ -10,9 +11,7 @@ interface AuthContextProps {
   logout: () => void;
 }
 
-const API_URL = 'http://192.168.0.11:8081';
-
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+export const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
@@ -22,11 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Nueva función para validar el token con el backend
   const validateToken = async (tokenToValidate: string) => {
     try {
-      const res = await fetch(`${API_URL}/auth/validate`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${tokenToValidate}` }
-      });
-      if (!res.ok) throw new Error('Token inválido');
+      const res = await apiClient.get('/auth/validate');
       return true;
     } catch {
       return false;
@@ -64,13 +59,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/signin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role: 'USER' })
-      });
-      if (!res.ok) throw new Error('Credenciales incorrectas');
-      const data = await res.json();
+      const response = await apiClient.post('/auth/signin', { email, password, role: 'USER' });
+      const data = response.data;
       setToken(data.token);
       setUser(data.user);
       await AsyncStorage.setItem('token', data.token);
@@ -86,13 +76,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (data: { firstName: string; lastName: string; email: string; password: string }) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) throw new Error('No se pudo registrar');
-      const resp = await res.json();
+      const response = await apiClient.post('/auth/signup', data);
+      const resp = response.data;
       setToken(resp.token);
       setUser(resp.user);
       await AsyncStorage.setItem('token', resp.token);
@@ -117,10 +102,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth debe usarse dentro de AuthProvider');
-  return context;
 };
