@@ -8,7 +8,7 @@ const BASE_URL = `${Constants.expoConfig?.extra?.API_URL}/api/exchanges`;
 export const exchangeService = {
   // Solicitar un intercambio
   requestExchange: async (exchangeRequest: ExchangeRequest): Promise<ExchangeResponse> => {
-    const response = await apiClient.post(`${BASE_URL}/request`, exchangeRequest);
+    const response = await apiClient.post(`${BASE_URL}`, exchangeRequest);
     return response.data;
   },
 

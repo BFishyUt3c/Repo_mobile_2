@@ -12,6 +12,12 @@ export enum CommunityType {
   PRIVATE = 'PRIVATE'
 }
 
+export interface CommunityRequestDto {
+  name: string;
+  description: string;
+  type: CommunityType;
+}
+
 export interface CommunityResponseDto {
   id: number;
   name: string;

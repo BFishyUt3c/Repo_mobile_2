@@ -19,17 +19,19 @@ import * as ImagePicker from 'expo-image-picker';
 
 interface RouteParams {
   product?: ProductResponseDto; // Si existe, es edición
+  productId?: number; // Si solo se pasa el id
 }
 
 const CreateEditProductScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { product } = route.params as RouteParams;
-  
+  const { product, productId } = route.params as RouteParams || {};
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [loadedProduct, setLoadedProduct] = useState<ProductResponseDto | null>(product || null);
+
   // Form data
   const [formData, setFormData] = useState({
     productName: '',
@@ -44,24 +46,45 @@ const CreateEditProductScreen: React.FC = () => {
 
   const [imageUri, setImageUri] = useState<string | null>(null);
 
-  const isEditing = !!product;
+  const isEditing = !!(loadedProduct || productId);
 
   useEffect(() => {
-    if (product) {
-      // Cargar datos del producto para edición
+    // Si no tenemos el producto pero sí el id, cargarlo
+    if (!loadedProduct && productId) {
+      setLoading(true);
+      productService.getProductById(productId)
+        .then((prod) => {
+          setLoadedProduct(prod);
+          setFormData({
+            productName: prod.productName,
+            description: prod.description,
+            category: prod.category,
+            condition: prod.condition,
+            estimatedValue: prod.estimatedValue.toString(),
+            imageUrl: prod.imageUrl,
+            availableForExchange: prod.availableForExchange,
+            exchangePreferences: prod.exchangePreferences || '',
+          });
+          setImageUri(prod.imageUrl);
+        })
+        .catch((err) => {
+          setError(err.message || 'Error al cargar el producto');
+        })
+        .finally(() => setLoading(false));
+    } else if (loadedProduct) {
       setFormData({
-        productName: product.productName,
-        description: product.description,
-        category: product.category,
-        condition: product.condition,
-        estimatedValue: product.estimatedValue.toString(),
-        imageUrl: product.imageUrl,
-        availableForExchange: product.availableForExchange,
-        exchangePreferences: product.exchangePreferences || '',
+        productName: loadedProduct.productName,
+        description: loadedProduct.description,
+        category: loadedProduct.category,
+        condition: loadedProduct.condition,
+        estimatedValue: loadedProduct.estimatedValue.toString(),
+        imageUrl: loadedProduct.imageUrl,
+        availableForExchange: loadedProduct.availableForExchange,
+        exchangePreferences: loadedProduct.exchangePreferences || '',
       });
-      setImageUri(product.imageUrl);
+      setImageUri(loadedProduct.imageUrl);
     }
-  }, [product]);
+  }, [productId, loadedProduct]);
 
   const handleInputChange = (field: keyof typeof formData, value: string | boolean) => {
     setFormData(prev => ({
@@ -137,11 +160,9 @@ const CreateEditProductScreen: React.FC = () => {
 
   const handleSave = async () => {
     if (!validateForm()) return;
-
     try {
       setSaving(true);
       setError(null);
-
       const productData = {
         productName: formData.productName.trim(),
         description: formData.description.trim(),
@@ -152,15 +173,17 @@ const CreateEditProductScreen: React.FC = () => {
         availableForExchange: formData.availableForExchange,
         exchangePreferences: formData.exchangePreferences.trim(),
       };
-
-      if (isEditing && product) {
-        await productService.updateProduct(product.productId, productData);
+      if (isEditing && (loadedProduct || productId)) {
+        const id = loadedProduct?.productId ?? productId;
+        if (typeof id !== 'number') {
+          throw new Error('ID de producto no definido');
+        }
+        await productService.updateProduct(id, productData);
         Alert.alert('Éxito', 'Producto actualizado correctamente');
       } else {
         await productService.createProduct(productData);
         Alert.alert('Éxito', 'Producto creado correctamente');
       }
-
       navigation.goBack();
     } catch (err: any) {
       setError(err.message || 'Error al guardar el producto');

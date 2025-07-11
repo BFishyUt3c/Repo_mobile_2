@@ -2,7 +2,7 @@ import { apiClient } from '../config/apiClient';
 import { ProductResponseDto, Category, Condition, ProductStatus } from '../types/product';
 import Constants from 'expo-constants';
 
-const BASE_URL = `${Constants.expoConfig?.extra?.API_URL}/api/products`;
+const BASE_URL = `${Constants.expoConfig?.extra?.API_URL}/product`;
 
 export const productService = {
   // Obtener todos los productos

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { ProductResponseDto } from '../types/product';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ProductCardProps {
   product: ProductResponseDto;
@@ -15,13 +16,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'ELECTRONICS': return '📱';
-      case 'CLOTHING': return '👕';
-      case 'BOOKS': return '📚';
-      case 'HOME': return '🏠';
-      case 'SPORTS': return '⚽';
-      case 'TOYS': return '🧸';
-      default: return '📦';
+      case 'ELECTRONICS': return <Ionicons name="phone-portrait-outline" size={16} color="#1976D2" />;
+      case 'CLOTHING': return <Ionicons name="shirt-outline" size={16} color="#1976D2" />;
+      case 'BOOKS': return <Ionicons name="book-outline" size={16} color="#1976D2" />;
+      case 'HOME': return <Ionicons name="home-outline" size={16} color="#1976D2" />;
+      case 'SPORTS': return <Ionicons name="football-outline" size={16} color="#1976D2" />;
+      case 'TOYS': return <Ionicons name="game-controller-outline" size={16} color="#1976D2" />;
+      default: return <Ionicons name="cube-outline" size={16} color="#1976D2" />;
     }
   };
 
@@ -60,11 +61,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         ) : (
           <View style={styles.placeholderImage}>
-            <Text style={styles.placeholderText}>📦</Text>
+            <Ionicons name="cube-outline" size={48} color="#ccc" />
           </View>
         )}
         <View style={styles.categoryBadge}>
-          <Text style={styles.categoryIcon}>{getCategoryIcon(product.category)}</Text>
+          {getCategoryIcon(product.category)}
         </View>
       </View>
 
@@ -101,7 +102,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {product.availableForExchange && (
           <View style={styles.exchangeBadge}>
-            <Text style={styles.exchangeText}>🔄 Intercambio</Text>
+            <Ionicons name="swap-horizontal-outline" size={14} color="#1976D2" />
+            <Text style={styles.exchangeText}> Intercambio</Text>
           </View>
         )}
 
@@ -110,7 +112,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
             style={styles.exchangeButton}
             onPress={() => onExchangePress(product)}
           >
-            <Text style={styles.exchangeButtonText}>Intercambiar</Text>
+            <Ionicons name="swap-horizontal-outline" size={16} color="#fff" />
+            <Text style={styles.exchangeButtonText}> Intercambiar</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -215,11 +218,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   exchangeText: {
     fontSize: 12,
     color: '#1976D2',
     fontWeight: '500',
+    marginLeft: 4,
   },
   exchangeButton: {
     backgroundColor: '#2196F3',
@@ -227,11 +233,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   exchangeButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '500',
+    marginLeft: 4,
   },
 });
 

@@ -45,10 +45,22 @@ const ProfileScreen: React.FC = () => {
       color: colors.success,
     },
     {
-      title: 'Mis Publicaciones',
-      icon: 'document-text-outline',
-      onPress: () => navigation.navigate('Posts' as never),
+      title: 'Mis Intercambios',
+      icon: 'swap-horizontal-outline',
+      onPress: () => navigation.navigate('Exchanges' as never),
       color: colors.accent,
+    },
+    {
+      title: 'Buscar Personas',
+      icon: 'people-outline',
+      onPress: () => navigation.navigate('SearchPeople' as never),
+      color: colors.warning,
+    },
+    {
+      title: 'Mis Contactos',
+      icon: 'person-circle-outline',
+      onPress: () => navigation.navigate('Contacts' as never),
+      color: colors.info,
     },
     {
       title: 'Lista de Deseos',
@@ -188,8 +200,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   userEmail: {
-    fontSize: fontSizes.subtitle,
-    fontFamily: fonts.regular,
+    fontSize: fontSizes.body,
     color: colors.textSecondary,
     marginBottom: 20,
   },
@@ -208,7 +219,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: fontSizes.small,
-    fontFamily: fonts.regular,
     color: colors.textSecondary,
     marginTop: 2,
   },
@@ -219,7 +229,7 @@ const styles = StyleSheet.create({
   },
   menuSection: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingVertical: 20,
   },
   sectionTitle: {
     fontSize: fontSizes.subtitle,
@@ -229,12 +239,13 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: 16,
+    paddingVertical: 15,
+    paddingHorizontal: 15,
     marginBottom: 10,
+    borderRadius: 10,
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -254,7 +265,7 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   menuTitle: {
-    fontSize: fontSizes.subtitle,
+    fontSize: fontSizes.body,
     fontFamily: fonts.medium,
     color: colors.primaryText,
   },
@@ -264,7 +275,6 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: fontSizes.small,
-    fontFamily: fonts.regular,
     color: colors.textSecondary,
   },
 });

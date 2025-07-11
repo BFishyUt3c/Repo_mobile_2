@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   TouchableOpacity
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CommunitySummaryDto, CommunityType } from '../types/community';
 import { communityService } from '../services/communityService';
@@ -19,6 +20,7 @@ import { colors, fontSizes, borderRadius, spacing, shadow, fonts } from '../styl
 type TabType = 'all' | 'my' | 'popular' | 'recent';
 
 const CommunityScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [communities, setCommunities] = useState<CommunitySummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,6 +144,10 @@ const CommunityScreen: React.FC = () => {
     Alert.alert('Comunidad', `Detalles de ${community.name}`);
   };
 
+  const handleCreateCommunity = () => {
+    navigation.navigate('CreateEditCommunity' as never);
+  };
+
   useEffect(() => {
     loadCommunities(activeTab);
   }, [loadCommunities, activeTab]);
@@ -186,6 +192,12 @@ const CommunityScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Comunidades</Text>
+        <TouchableOpacity 
+          style={styles.createButton}
+          onPress={handleCreateCommunity}
+        >
+          <Ionicons name="add" size={24} color={colors.white} />
+        </TouchableOpacity>
       </View>
 
       <CommunitySearchBar onSearch={handleSearch} />
@@ -228,17 +240,29 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   header: {
-    padding: spacing.md,
-    backgroundColor: 'white',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.lightGray,
   },
   title: {
     fontSize: fontSizes.title,
-    color: colors.primary,
     fontWeight: 'bold',
+    color: colors.black,
     fontFamily: fonts.bold,
-    marginBottom: spacing.lg,
+  },
+  createButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadow,
   },
   tabs: {
     flexDirection: 'row',

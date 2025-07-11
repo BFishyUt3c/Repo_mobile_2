@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Función utilitaria para decodificar JWT sin dependencias externas
 export const decodeJWT = (token: string) => {
   try {
-    // Un JWT tiene 3 partes separadas por puntos: header.payload.signature
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(

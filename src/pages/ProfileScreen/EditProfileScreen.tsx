@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { updateProfile } from '../../services/userService';
 import * as ImagePicker from 'expo-image-picker';
 import AvatarPlaceholder from '../../components/AvatarPlaceholder';
+import { Ionicons } from '@expo/vector-icons';
 
 const EditProfileScreen: React.FC = () => {
   const { user, refreshUser } = useUser();
@@ -27,48 +28,208 @@ const EditProfileScreen: React.FC = () => {
     );
   };
 
+  const validateForm = () => {
+    if (!firstName.trim()) {
+      setError('El nombre es obligatorio');
+      return false;
+    }
+    if (!lastName.trim()) {
+      setError('El apellido es obligatorio');
+      return false;
+    }
+    return true;
+  };
+
   const handleSave = async () => {
     if (!token) {
       setError('No hay token de autenticación');
       return;
     }
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess(false);
+    
     try {
-      await updateProfile({ firstName, lastName, address, description }, token);
+      const profileData = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        address: address.trim(),
+        description: description.trim()
+      };
+
+      await updateProfile(profileData, token);
       setSuccess(true);
-      if (authUser?.id) await refreshUser(authUser.id);
-      Alert.alert('Perfil actualizado', 'Tus cambios se han guardado correctamente.');
+      
+      // Actualizar el contexto de usuario
+      if (authUser?.id) {
+        await refreshUser(authUser.id);
+      }
+      
+      Alert.alert(
+        'Perfil Actualizado', 
+        'Tus cambios se han guardado correctamente.',
+        [{ text: 'OK' }]
+      );
     } catch (e: any) {
-      setError('No se pudo actualizar el perfil');
+      console.error('Error updating profile:', e);
+      let errorMessage = 'No se pudo actualizar el perfil';
+      
+      if (e.response?.status === 400) {
+        errorMessage = 'Los datos enviados no son válidos. Verifica la información.';
+      } else if (e.response?.status === 401) {
+        errorMessage = 'Sesión expirada. Por favor inicia sesión nuevamente.';
+      } else if (e.response?.status === 500) {
+        errorMessage = 'Error del servidor. Inténtalo más tarde.';
+      } else if (e.message) {
+        errorMessage = e.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (hasChanges()) {
+      Alert.alert(
+        'Descartar Cambios',
+        '¿Estás seguro de que quieres descartar los cambios?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Descartar',
+            style: 'destructive',
+            onPress: () => {
+              setFirstName(user?.firstName || '');
+              setLastName(user?.lastName || '');
+              setAddress(user?.address || '');
+              setDescription(user?.description || '');
+              setError('');
+              setSuccess(false);
+            }
+          }
+        ]
+      );
     }
   };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Editar Perfil</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+            <Ionicons name="close" size={24} color={colors.gray} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Editar Perfil</Text>
+          <TouchableOpacity 
+            style={[styles.saveButton, (!hasChanges() || loading) && styles.saveButtonDisabled]} 
+            onPress={handleSave}
+            disabled={!hasChanges() || loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <Text style={styles.saveButtonText}>Guardar</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.avatarContainer}>
           <AvatarPlaceholder name={firstName || user?.email || ''} size={80} />
+          <TouchableOpacity style={styles.editAvatarButton}>
+            <Ionicons name="camera" size={20} color={colors.white} />
+          </TouchableOpacity>
         </View>
-        <Text style={styles.label}>Nombre</Text>
-        <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} placeholder="Nombre" />
-        <Text style={styles.label}>Apellido</Text>
-        <TextInput style={styles.input} value={lastName} onChangeText={setLastName} placeholder="Apellido" />
-        <Text style={styles.label}>Dirección</Text>
-        <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Dirección" />
-        <Text style={styles.label}>Descripción</Text>
-        <TextInput style={[styles.input, styles.textarea]} value={description} onChangeText={setDescription} placeholder="Descripción" multiline numberOfLines={3} />
-        <Text style={styles.label}>Correo electrónico</Text>
-        <Text style={styles.email}>{user?.email}</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        {success ? <Text style={styles.success}>¡Perfil actualizado!</Text> : null}
-        <TouchableOpacity style={[styles.button, !hasChanges() && styles.buttonDisabled]} onPress={handleSave} disabled={!hasChanges() || loading}>
-          {loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.buttonText}>Guardar</Text>}
-        </TouchableOpacity>
+
+        <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nombre *</Text>
+            <TextInput 
+              style={[styles.input, !firstName.trim() && styles.inputError]} 
+              value={firstName} 
+              onChangeText={(text) => {
+                setFirstName(text);
+                setError('');
+              }} 
+              placeholder="Tu nombre" 
+              maxLength={50}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Apellido *</Text>
+            <TextInput 
+              style={[styles.input, !lastName.trim() && styles.inputError]} 
+              value={lastName} 
+              onChangeText={(text) => {
+                setLastName(text);
+                setError('');
+              }} 
+              placeholder="Tu apellido" 
+              maxLength={50}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Dirección</Text>
+            <TextInput 
+              style={styles.input} 
+              value={address} 
+              onChangeText={(text) => {
+                setAddress(text);
+                setError('');
+              }} 
+              placeholder="Tu dirección (opcional)" 
+              maxLength={200}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Descripción</Text>
+            <TextInput 
+              style={[styles.input, styles.textarea]} 
+              value={description} 
+              onChangeText={(text) => {
+                setDescription(text);
+                setError('');
+              }} 
+              placeholder="Cuéntanos sobre ti (opcional)" 
+              multiline 
+              numberOfLines={4}
+              maxLength={500}
+            />
+            <Text style={styles.characterCount}>{description.length}/500</Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Correo electrónico</Text>
+            <View style={styles.emailContainer}>
+              <Text style={styles.email}>{user?.email}</Text>
+              <Ionicons name="lock-closed" size={16} color={colors.gray} />
+            </View>
+            <Text style={styles.emailNote}>El correo electrónico no se puede modificar</Text>
+          </View>
+
+          {error ? (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle" size={20} color={colors.error} />
+              <Text style={styles.error}>{error}</Text>
+            </View>
+          ) : null}
+
+          {success ? (
+            <View style={styles.successContainer}>
+              <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+              <Text style={styles.success}>¡Perfil actualizado correctamente!</Text>
+            </View>
+          ) : null}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -78,96 +239,147 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background,
-    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  cancelButton: {
+    padding: spacing.sm,
   },
   title: {
-    fontSize: fontSizes.title,
+    fontSize: fontSizes.subtitle,
     color: colors.primary,
     fontFamily: fonts.bold,
-    marginBottom: spacing.lg,
     fontWeight: 'bold',
   },
-  label: {
-    alignSelf: 'flex-start',
+  saveButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  saveButtonDisabled: {
+    backgroundColor: colors.gray,
+  },
+  saveButtonText: {
+    color: colors.white,
+    fontWeight: 'bold',
     fontSize: fontSizes.body,
-    color: colors.gray,
+    fontFamily: fonts.bold,
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    marginVertical: spacing.lg,
+    position: 'relative',
+  },
+  editAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: '35%',
+    backgroundColor: colors.primary,
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.white,
+  },
+  form: {
+    paddingHorizontal: spacing.lg,
+  },
+  inputGroup: {
+    marginBottom: spacing.md,
+  },
+  label: {
+    fontSize: fontSizes.body,
+    color: colors.black,
     marginBottom: spacing.xs,
-    marginTop: spacing.md,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
+    fontWeight: '500',
   },
   input: {
-    width: '100%',
     backgroundColor: colors.white,
     borderRadius: borderRadius.md,
     padding: spacing.md,
-    marginBottom: spacing.sm,
     fontSize: fontSizes.body,
     color: colors.black,
     fontFamily: fonts.regular,
     borderWidth: 1,
     borderColor: colors.lightGray,
   },
+  inputError: {
+    borderColor: colors.error,
+    borderWidth: 2,
+  },
   textarea: {
-    minHeight: 80,
+    minHeight: 100,
     textAlignVertical: 'top',
   },
-  email: {
-    width: '100%',
+  characterCount: {
+    fontSize: fontSizes.small,
+    color: colors.gray,
+    textAlign: 'right',
+    marginTop: spacing.xs,
+  },
+  emailContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.lightGray,
     borderRadius: borderRadius.md,
     padding: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  email: {
+    flex: 1,
     fontSize: fontSizes.body,
     color: colors.gray,
     fontFamily: fonts.regular,
-    marginBottom: spacing.md,
   },
-  button: {
-    width: '100%',
-    backgroundColor: colors.success,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+  emailNote: {
+    fontSize: fontSizes.small,
+    color: colors.gray,
+    fontStyle: 'italic',
+  },
+  errorContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.lg,
-  },
-  buttonDisabled: {
-    backgroundColor: colors.gray,
-  },
-  buttonText: {
-    color: colors.white,
-    fontWeight: 'bold',
-    fontSize: fontSizes.body,
-    fontFamily: fonts.bold,
+    backgroundColor: colors.errorLight,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.md,
   },
   error: {
     color: colors.error,
-    marginBottom: spacing.md,
+    marginLeft: spacing.sm,
     fontWeight: 'bold',
     fontSize: fontSizes.body,
+    flex: 1,
+  },
+  successContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.lightGreen,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.md,
   },
   success: {
     color: colors.success,
-    marginBottom: spacing.md,
+    marginLeft: spacing.sm,
     fontWeight: 'bold',
     fontSize: fontSizes.body,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  avatarImg: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.primaryLight,
-  },
-  avatarEditText: {
-    color: colors.primary,
-    fontSize: fontSizes.small,
-    textAlign: 'center',
-    marginBottom: spacing.md,
+    flex: 1,
   },
 });
 

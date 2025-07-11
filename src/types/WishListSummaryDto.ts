@@ -3,5 +3,4 @@ export interface WishListSummaryDto {
   name: string;
   productCount: number;
   isPublic: boolean;
-  // Puedes agregar más campos según tu backend
 } 

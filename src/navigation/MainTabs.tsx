@@ -18,6 +18,10 @@ import ChatListScreen from '../pages/ChatListScreen';
 import ChatScreen from '../pages/ChatScreen';
 import NotificationsScreen from '../pages/NotificationsScreen';
 import ProfileStack from './ProfileStack';
+import SearchPeopleScreen from '../pages/SearchPeopleScreen';
+import ContactsScreen from '../pages/ContactsScreen';
+import PostsScreen from '../pages/PostsScreen';
+import CreatePostScreen from '../pages/CreatePostScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -40,26 +44,26 @@ const ProductStack = () => (
       component={CreateEditProductScreen}
       options={{ title: 'Crear/Editar Producto' }}
     />
-  </Stack.Navigator>
-);
-
-// Stack para la pestaña de Intercambios
-const ExchangeStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen 
-      name="ExchangeList" 
-      component={ExchangeScreen}
-      options={{ title: 'Intercambios' }}
-    />
-    <Stack.Screen 
-      name="ExchangeDetail" 
-      component={ExchangeDetailScreen}
-      options={{ title: 'Detalle del Intercambio' }}
-    />
     <Stack.Screen 
       name="CreateExchange" 
       component={CreateExchangeScreen}
       options={{ title: 'Crear Intercambio' }}
+    />
+  </Stack.Navigator>
+);
+
+// Stack para la pestaña de Posts
+const PostsStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen 
+      name="PostsList" 
+      component={PostsScreen}
+      options={{ title: 'Posts' }}
+    />
+    <Stack.Screen 
+      name="CreatePost" 
+      component={CreatePostScreen}
+      options={{ title: 'Crear Post' }}
     />
   </Stack.Navigator>
 );
@@ -112,8 +116,8 @@ const MainTabs = () => {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Products') {
             iconName = focused ? 'cube' : 'cube-outline';
-          } else if (route.name === 'Exchanges') {
-            iconName = focused ? 'swap-horizontal' : 'swap-horizontal-outline';
+          } else if (route.name === 'Posts') {
+            iconName = focused ? 'document-text' : 'document-text-outline';
           } else if (route.name === 'Communities') {
             iconName = focused ? 'people' : 'people-outline';
           } else if (route.name === 'Chat') {
@@ -142,9 +146,9 @@ const MainTabs = () => {
         options={{ title: 'Productos' }}
       />
       <Tab.Screen 
-        name="Exchanges" 
-        component={ExchangeStack}
-        options={{ title: 'Intercambios' }}
+        name="Posts" 
+        component={PostsStack}
+        options={{ title: 'Posts' }}
       />
       <Tab.Screen 
         name="Communities" 

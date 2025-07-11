@@ -4,20 +4,24 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  RefreshControl,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
+  RefreshControl,
+  SafeAreaView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, fontSizes } from '../styles/theme';
-import StatCard from '../components/StatCard';
 import { donationService } from '../services/donationService';
 import { exchangeService } from '../services/exchangeService';
-import { communityService } from '../services/communityService';
 import { productService } from '../services/productService';
+import { communityService } from '../services/communityService';
+import * as homeService from '../services/homeService';
+import { postService } from '../services/postService';
+import { wishListService } from '../services/wishListService';
 import { DonationStatisticsDto } from '../types/donation';
 import { ExchangeStatistics } from '../types/exchange';
+import { colors, fonts, fontSizes } from '../styles/theme';
+import StatCard from '../components/StatCard';
 
 interface UserStatistics {
   donations: DonationStatisticsDto;
@@ -28,6 +32,7 @@ interface UserStatistics {
   totalWishlists: number;
   pointsEarned: number;
   level: string;
+  dashboardStats?: any; // Estadísticas globales del dashboard
 }
 
 const StatisticsScreen: React.FC = () => {
@@ -45,31 +50,90 @@ const StatisticsScreen: React.FC = () => {
       setLoading(true);
       
       // Cargar estadísticas de donaciones
-      const donationStats = await donationService.getUserDonationStatistics();
+      let donationStats;
+      try {
+        donationStats = await donationService.getUserDonationStatistics();
+      } catch (error) {
+        console.log('Donation stats not available, using default values');
+        donationStats = {
+          totalDonations: 0,
+          completedDonations: 0,
+          pendingDonations: 0,
+          cancelledDonations: 0,
+          totalPointsEarned: 0
+        };
+      }
       
       // Cargar estadísticas de intercambios
-      const exchangeStats = await exchangeService.getExchangeStatistics();
+      let exchangeStats;
+      try {
+        exchangeStats = await exchangeService.getExchangeStatistics();
+      } catch (error) {
+        console.log('Exchange stats not available, using default values');
+        exchangeStats = {
+          totalExchanges: 0,
+          pendingExchanges: 0,
+          completedExchanges: 0,
+          rejectedExchanges: 0
+        };
+      }
       
-      // Cargar otros datos del usuario
-      const userProducts = await productService.getUserProducts();
-      const userCommunities = await communityService.getUserCommunities();
+      // Cargar productos del usuario
+      let userProducts = [];
+      try {
+        userProducts = await productService.getUserProducts();
+      } catch (error) {
+        console.log('User products not available, using empty array');
+      }
       
-      // Simular datos de posts y wishlists (ajustar según backend)
-      const mockStats: UserStatistics = {
+      // Cargar comunidades del usuario
+      let userCommunities = [];
+      try {
+        userCommunities = await communityService.getUserCommunities();
+      } catch (error) {
+        console.log('User communities not available, using empty array');
+      }
+      
+      // Cargar posts del usuario
+      let userPosts = [];
+      try {
+        userPosts = await postService.getAllPosts();
+      } catch (error) {
+        console.log('Posts endpoint not available, using empty array');
+      }
+      
+      // Cargar wishlists del usuario
+      let userWishlists = [];
+      try {
+        userWishlists = await wishListService.getUserWishLists();
+      } catch (error) {
+        console.log('Wishlists endpoint not available, using empty array');
+      }
+      
+      // Cargar estadísticas globales del dashboard
+      let dashboardStats = null;
+      try {
+        dashboardStats = await homeService.getDashboardStats();
+      } catch (error) {
+        console.log('Dashboard stats not available');
+      }
+      
+      const userStats: UserStatistics = {
         donations: donationStats,
         exchanges: exchangeStats,
         totalProducts: userProducts.length,
         totalCommunities: userCommunities.length,
-        totalPosts: Math.floor(Math.random() * 20) + 5, // Mock data
-        totalWishlists: Math.floor(Math.random() * 5) + 1, // Mock data
+        totalPosts: userPosts.length,
+        totalWishlists: userWishlists.length,
         pointsEarned: donationStats.totalPointsEarned + (exchangeStats.completedExchanges * 50),
         level: calculateLevel(donationStats.totalPointsEarned + (exchangeStats.completedExchanges * 50)),
+        dashboardStats,
       };
       
-      setStatistics(mockStats);
+      setStatistics(userStats);
     } catch (error) {
       console.error('Error loading statistics:', error);
-      Alert.alert('Error', 'No se pudieron cargar las estadísticas');
+      Alert.alert('Error', 'No se pudieron cargar las estadísticas. Verifica que el backend esté corriendo.');
     } finally {
       setLoading(false);
     }
@@ -125,32 +189,32 @@ const StatisticsScreen: React.FC = () => {
 
   const renderDonationStats = () => {
     if (!statistics) return null;
-    
+    const donations = statistics.donations || {};
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Donaciones</Text>
         <View style={styles.statsGrid}>
           <StatCard
             title="Total Donaciones"
-            value={statistics.donations.totalDonations}
+            value={donations.totalDonations ?? 0}
             icon="gift-outline"
             color={colors.primary}
           />
           <StatCard
             title="Completadas"
-            value={statistics.donations.completedDonations}
+            value={donations.completedDonations ?? 0}
             icon="checkmark-circle-outline"
             color={colors.success}
           />
           <StatCard
             title="Pendientes"
-            value={statistics.donations.pendingDonations}
+            value={donations.pendingDonations ?? 0}
             icon="time-outline"
             color={colors.warning}
           />
           <StatCard
             title="Puntos Ganados"
-            value={statistics.donations.totalPointsEarned}
+            value={donations.totalPointsEarned ?? 0}
             icon="star-outline"
             color={colors.accent}
           />
@@ -161,32 +225,32 @@ const StatisticsScreen: React.FC = () => {
 
   const renderExchangeStats = () => {
     if (!statistics) return null;
-    
+    const exchanges = statistics.exchanges || {};
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Intercambios</Text>
         <View style={styles.statsGrid}>
           <StatCard
             title="Total Intercambios"
-            value={statistics.exchanges.totalExchanges}
+            value={exchanges.totalExchanges ?? 0}
             icon="swap-horizontal-outline"
             color={colors.primary}
           />
           <StatCard
             title="Completados"
-            value={statistics.exchanges.completedExchanges}
+            value={exchanges.completedExchanges ?? 0}
             icon="checkmark-circle-outline"
             color={colors.success}
           />
           <StatCard
             title="Pendientes"
-            value={statistics.exchanges.pendingExchanges}
+            value={exchanges.pendingExchanges ?? 0}
             icon="time-outline"
             color={colors.warning}
           />
           <StatCard
             title="Rechazados"
-            value={statistics.exchanges.rejectedExchanges}
+            value={exchanges.rejectedExchanges ?? 0}
             icon="close-circle-outline"
             color={colors.error}
           />
@@ -197,32 +261,31 @@ const StatisticsScreen: React.FC = () => {
 
   const renderGeneralStats = () => {
     if (!statistics) return null;
-    
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Actividad General</Text>
         <View style={styles.statsGrid}>
           <StatCard
             title="Productos"
-            value={statistics.totalProducts}
+            value={statistics.totalProducts ?? 0}
             icon="cube-outline"
             color={colors.primary}
           />
           <StatCard
             title="Comunidades"
-            value={statistics.totalCommunities}
+            value={statistics.totalCommunities ?? 0}
             icon="people-outline"
             color={colors.info}
           />
           <StatCard
             title="Publicaciones"
-            value={statistics.totalPosts}
+            value={statistics.totalPosts ?? 0}
             icon="document-text-outline"
             color={colors.accent}
           />
           <StatCard
             title="Listas de Deseos"
-            value={statistics.totalWishlists}
+            value={statistics.totalWishlists ?? 0}
             icon="heart-outline"
             color={colors.error}
           />
@@ -231,9 +294,58 @@ const StatisticsScreen: React.FC = () => {
     );
   };
 
+  const renderDashboardStats = () => {
+    if (!statistics?.dashboardStats) return null;
+    const ds = statistics.dashboardStats;
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Estadísticas Globales</Text>
+        <View style={styles.statsGrid}>
+          <StatCard
+            title="Usuarios Totales"
+            value={ds.totalUsers ?? 0}
+            icon="people-outline"
+            color={colors.primary}
+          />
+          <StatCard
+            title="Productos Totales"
+            value={ds.totalProducts ?? 0}
+            icon="cube-outline"
+            color={colors.info}
+          />
+          <StatCard
+            title="Intercambios Totales"
+            value={ds.totalExchanges ?? 0}
+            icon="swap-horizontal-outline"
+            color={colors.accent}
+          />
+          <StatCard
+            title="Donaciones Totales"
+            value={ds.totalDonations ?? 0}
+            icon="gift-outline"
+            color={colors.success}
+          />
+        </View>
+        {ds.wasteAvoided !== undefined && ds.wasteAvoided !== null && (
+          <View style={styles.wasteImpactCard}>
+            <View style={styles.wasteImpactHeader}>
+              <Ionicons name="leaf-outline" size={24} color={colors.success} />
+              <Text style={styles.wasteImpactTitle}>Impacto Ambiental</Text>
+            </View>
+            <Text style={styles.wasteImpactValue}>
+              {ds.wasteAvoided ?? 0} kg
+            </Text>
+            <Text style={styles.wasteImpactSubtitle}>
+              Residuos evitados por la comunidad
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const renderAchievements = () => {
     if (!statistics) return null;
-    
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Logros</Text>
@@ -242,19 +354,18 @@ const StatisticsScreen: React.FC = () => {
             <Ionicons name="trophy-outline" size={24} color={colors.accent} />
             <Text style={styles.achievementTitle}>Nivel Actual</Text>
           </View>
-          <Text style={styles.achievementValue}>{statistics.level}</Text>
+          <Text style={styles.achievementValue}>{statistics.level ?? 'N/A'}</Text>
           <Text style={styles.achievementSubtitle}>
-            {statistics.pointsEarned} puntos totales
+            {(statistics.pointsEarned ?? 0)} puntos totales
           </Text>
         </View>
-        
         <View style={styles.achievementCard}>
           <View style={styles.achievementHeader}>
             <Ionicons name="leaf-outline" size={24} color={colors.success} />
             <Text style={styles.achievementTitle}>Impacto Ambiental</Text>
           </View>
           <Text style={styles.achievementValue}>
-            {statistics.donations.completedDonations + statistics.exchanges.completedExchanges}
+            {(statistics.donations?.completedDonations ?? 0) + (statistics.exchanges?.completedExchanges ?? 0)}
           </Text>
           <Text style={styles.achievementSubtitle}>
             Objetos reutilizados
@@ -293,6 +404,7 @@ const StatisticsScreen: React.FC = () => {
         {renderDonationStats()}
         {renderExchangeStats()}
         {renderGeneralStats()}
+        {renderDashboardStats()}
         {renderAchievements()}
         
         <View style={styles.footer}>
@@ -417,6 +529,39 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   footerText: {
+    fontSize: fontSizes.small,
+    fontFamily: fonts.regular,
+    color: colors.textSecondary,
+  },
+  wasteImpactCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 15,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  wasteImpactHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 10,
+  },
+  wasteImpactTitle: {
+    fontSize: fontSizes.body,
+    fontFamily: fonts.medium,
+    color: colors.primaryText,
+  },
+  wasteImpactValue: {
+    fontSize: fontSizes.title,
+    fontFamily: fonts.bold,
+    color: colors.success,
+    marginBottom: 5,
+  },
+  wasteImpactSubtitle: {
     fontSize: fontSizes.small,
     fontFamily: fonts.regular,
     color: colors.textSecondary,

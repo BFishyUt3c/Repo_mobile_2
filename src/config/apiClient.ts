@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
     const { status, data } = error.response;
     switch (status) {
       case 401:
-        await AsyncStorage.removeItem('token');
+        // await AsyncStorage.removeItem('token'); // Eliminado: no borrar el token automáticamente
         error.message = 'Sesión expirada. Por favor inicia sesión nuevamente.';
         break;
       case 403:

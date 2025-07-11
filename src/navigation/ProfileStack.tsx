@@ -7,9 +7,12 @@ import WishlistScreen from '../pages/ProfileScreen/WishlistScreen';
 import SettingsScreen from '../pages/ProfileScreen/SettingsScreen';
 import WishlistDetailScreen from '../pages/WishlistDetailScreen';
 import CreateEditWishlistScreen from '../pages/CreateEditWishlistScreen';
-import PostListScreen from '../pages/PostListScreen';
-import CreatePostScreen from '../pages/CreatePostScreen';
 import StatisticsScreen from '../pages/StatisticsScreen';
+import SearchPeopleScreen from '../pages/SearchPeopleScreen';
+import ContactsScreen from '../pages/ContactsScreen';
+import ExchangeScreen from '../pages/ExchangeScreen';
+import ExchangeDetailScreen from '../pages/ExchangeDetailScreen';
+import CreateExchangeScreen from '../pages/CreateExchangeScreen';
 
 const Stack = createStackNavigator();
 
@@ -25,10 +28,13 @@ const ProfileStack = () => (
     <Stack.Screen name="Wishlist" component={WishlistScreen} />
     <Stack.Screen name="WishlistDetail" component={WishlistDetailScreen} />
     <Stack.Screen name="CreateEditWishlist" component={CreateEditWishlistScreen} />
-    <Stack.Screen name="Posts" component={PostListScreen} />
-    <Stack.Screen name="CreatePost" component={CreatePostScreen} />
+    <Stack.Screen name="Exchanges" component={ExchangeScreen} />
+    <Stack.Screen name="ExchangeDetail" component={ExchangeDetailScreen} />
+    <Stack.Screen name="CreateExchange" component={CreateExchangeScreen} />
     <Stack.Screen name="Settings" component={SettingsScreen} />
     <Stack.Screen name="Statistics" component={StatisticsScreen} />
+    <Stack.Screen name="SearchPeople" component={SearchPeopleScreen} />
+    <Stack.Screen name="Contacts" component={ContactsScreen} />
   </Stack.Navigator>
 );
 

@@ -5,6 +5,7 @@ export const colors = {
   primaryLight: '#e8f5e9',
   accent: '#ff9800', // Naranja/acento
   error: '#d32f2f',
+  errorLight: '#ffebee',
   warning: '#ffb300',
   info: '#1976d2',
   success: '#4caf50',
