@@ -65,6 +65,28 @@ const ProductListScreen: React.FC = () => {
     navigation.navigate({ name: 'CreateExchange', params: { productId: product.productId } });
   };
 
+  const handleDeleteProduct = (product: ProductResponseDto) => {
+    Alert.alert(
+      'Eliminar producto',
+      `¿Seguro que deseas eliminar "${product.productName}"? Esta acción no se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar', style: 'destructive', onPress: async () => {
+            try {
+              await productService.deleteProduct(product.productId);
+              setProducts(prev => prev.filter(p => p.productId !== product.productId));
+              setFilteredProducts(prev => prev.filter(p => p.productId !== product.productId));
+              Alert.alert('Eliminado', 'Producto eliminado correctamente');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo eliminar el producto');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleSearch = (text: string) => {
     setSearchTerm(text);
     filterProducts(text, selectedCategory);
@@ -100,6 +122,7 @@ const ProductListScreen: React.FC = () => {
       product={item}
       onPress={handleProductPress}
       onExchangePress={handleExchangePress}
+      onDelete={handleDeleteProduct}
     />
   );
 
@@ -222,6 +245,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    paddingTop: 50, // Added paddingTop for header
+    height: 100, // Increased height for header
   },
   title: {
     fontSize: 24,

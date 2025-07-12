@@ -5,6 +5,8 @@ import { ProductResponseDto } from '../types/product';
 // TODO: Crear el servicio wishListService si no existe
 import { wishListService } from '../services/wishListService';
 import { useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { Alert } from 'react-native';
 
 interface RouteParams {
   wishlistId: number;
@@ -17,6 +19,7 @@ const WishlistDetailScreen: React.FC = () => {
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [wishlistProductIds, setWishlistProductIds] = useState<number[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -26,6 +29,7 @@ const WishlistDetailScreen: React.FC = () => {
         const wl = await wishListService.getWishList(wishlistId);
         setWishlist(wl);
         setProducts(wl.products || []);
+        setWishlistProductIds((wl.products || []).map((p: any) => p.productId));
       } catch (e: any) {
         setError(e.message || 'Error al cargar la wishlist');
       }
@@ -33,6 +37,25 @@ const WishlistDetailScreen: React.FC = () => {
     };
     load();
   }, [wishlistId]);
+
+  const handleToggleWishlist = async (productId: number) => {
+    try {
+      let updated;
+      if (wishlistProductIds.includes(productId)) {
+        await wishListService.removeFromWishList(wishlistId, productId);
+        updated = wishlistProductIds.filter(id => id !== productId);
+        Alert.alert('Wishlist', 'Producto eliminado de la lista');
+      } else {
+        await wishListService.addToWishList(wishlistId, productId);
+        updated = [...wishlistProductIds, productId];
+        Alert.alert('Wishlist', 'Producto agregado a la lista');
+      }
+      setWishlistProductIds(updated);
+      setProducts(products.map(p => p.productId === productId ? { ...p, inWishList: !p.inWishList } : p));
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo actualizar la wishlist');
+    }
+  };
 
   if (loading) {
     return <ActivityIndicator style={{ flex: 1, marginTop: 32 }} size="large" />;
@@ -65,6 +88,16 @@ const WishlistDetailScreen: React.FC = () => {
           <View style={styles.productCard}>
             <Text style={styles.productName}>{item.productName}</Text>
             <Text style={styles.productMeta}>{item.category} • {item.condition}</Text>
+            <TouchableOpacity
+              style={{ position: 'absolute', right: 16, top: 16 }}
+              onPress={() => handleToggleWishlist(item.productId)}
+            >
+              <Ionicons
+                name={wishlistProductIds.includes(item.productId) ? 'heart' : 'heart-outline'}
+                size={28}
+                color={wishlistProductIds.includes(item.productId) ? 'red' : '#888'}
+              />
+            </TouchableOpacity>
           </View>
         )}
         ListEmptyComponent={<Text>No hay productos en esta wishlist.</Text>}

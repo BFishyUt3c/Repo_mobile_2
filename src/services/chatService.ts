@@ -75,11 +75,18 @@ export const chatService = {
 
   // Iniciar un nuevo chat
   startChat: async (otherUserId: number, productId: number): Promise<Chat> => {
-    const response = await apiClient.post(`${BASE_URL}/start`, {
-      otherUserId,
-      productId
-    });
-    return response.data;
+    console.log('[startChat] Payload:', { otherUserId, productId });
+    try {
+      const response = await apiClient.post(`${BASE_URL}/start`, {
+        otherUserId,
+        productId
+      });
+      console.log('[startChat] Response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('[startChat] Error:', error, error?.response?.data);
+      throw error;
+    }
   },
 
   // Obtener información de un chat

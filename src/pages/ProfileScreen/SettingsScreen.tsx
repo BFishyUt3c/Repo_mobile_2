@@ -139,11 +139,9 @@ const SettingsScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Configuración</Text>
-      
       {/* Configuraciones de la App */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Configuración de la App</Text>
-        
         {renderSettingItem(
           'notifications-outline',
           'Notificaciones',
@@ -156,20 +154,6 @@ const SettingsScreen: React.FC = () => {
             thumbColor={notificationsEnabled ? colors.primary : colors.gray}
           />
         )}
-        
-        {renderSettingItem(
-          'moon-outline',
-          'Modo Oscuro',
-          'Cambiar entre tema claro y oscuro',
-          undefined,
-          <Switch
-            value={darkModeEnabled}
-            onValueChange={setDarkModeEnabled}
-            trackColor={{ false: colors.lightGray, true: colors.primaryLight }}
-            thumbColor={darkModeEnabled ? colors.primary : colors.gray}
-          />
-        )}
-        
         {renderSettingItem(
           'location-outline',
           'Ubicación',
@@ -182,7 +166,6 @@ const SettingsScreen: React.FC = () => {
             thumbColor={locationEnabled ? colors.primary : colors.gray}
           />
         )}
-        
         {renderSettingItem(
           'sync-outline',
           'Sincronización Automática',
@@ -196,66 +179,36 @@ const SettingsScreen: React.FC = () => {
           />
         )}
       </View>
-
       {/* Datos y Privacidad */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Datos y Privacidad</Text>
-        
-        {renderSettingItem(
-          'trash-outline',
-          'Limpiar Caché',
-          'Liberar espacio de almacenamiento',
-          handleClearCache
-        )}
-        
-        {renderSettingItem(
-          'download-outline',
-          'Exportar Datos',
-          'Descargar tus datos personales',
-          handleExportData
-        )}
-        
-        {renderSettingItem(
-          'shield-checkmark-outline',
-          'Política de Privacidad',
-          'Leer nuestra política de privacidad',
-          handlePrivacyPolicy
-        )}
-        
         {renderSettingItem(
           'document-text-outline',
+          'Política de Privacidad',
+          undefined,
+          handlePrivacyPolicy
+        )}
+        {renderSettingItem(
+          'shield-checkmark-outline',
           'Términos de Servicio',
-          'Leer los términos de servicio',
+          undefined,
           handleTermsOfService
         )}
       </View>
-
-      {/* Información */}
+      {/* Acerca de */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Información</Text>
-        
+        <Text style={styles.sectionTitle}>Acerca de</Text>
         {renderSettingItem(
           'information-circle-outline',
           'Acerca de GreenLoop',
-          'Información de la aplicación',
+          undefined,
           handleAbout
         )}
-        
-        {renderSettingItem(
-          'help-circle-outline',
-          'Ayuda y Soporte',
-          'Obtener ayuda y soporte técnico',
-          () => Alert.alert('Ayuda', 'Para obtener ayuda, contacta a nuestro equipo de soporte.')
-        )}
       </View>
-
-      {/* Cerrar Sesión */}
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color={colors.error} />
-          <Text style={styles.logoutText}>Cerrar Sesión</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Ionicons name="log-out-outline" size={20} color={colors.error} />
+        <Text style={styles.logoutText}>Cerrar Sesión</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };

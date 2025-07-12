@@ -18,6 +18,8 @@ import { communityService } from '../services/communityService';
 import { chatService } from '../services/chatService';
 import { productService } from '../services/productService';
 import { CommunityResponseDto, UserDto } from '../types/community';
+import { User } from '../types/User';
+import AvatarPlaceholder from '../components/AvatarPlaceholder';
 
 interface Contact {
   id: number;
@@ -35,10 +37,12 @@ const SearchPeopleScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [allUsers, setAllUsers] = useState<UserDto[]>([]); // Nuevo: lista global mock
 
   useEffect(() => {
     loadContacts();
     loadCommunities();
+    loadAllUsersMock(); // Nuevo: cargar usuarios globales mock
   }, []);
 
   const loadContacts = async () => {
@@ -195,6 +199,48 @@ const SearchPeopleScreen: React.FC = () => {
     }
   };
 
+  // Nuevo: función mock para obtener todos los usuarios únicos de comunidades y contactos
+  const loadAllUsersMock = async () => {
+    try {
+      setLoading(true);
+      const comms = await communityService.getAllCommunities();
+      let users: UserDto[] = [];
+      comms.forEach(com => {
+        if (com.members) {
+          users = users.concat(com.members);
+        }
+      });
+      // Agregar contactos guardados
+      const savedContacts = await AsyncStorage.getItem('userContacts');
+      if (savedContacts) {
+        const contactUsers: UserDto[] = JSON.parse(savedContacts);
+        users = users.concat(contactUsers);
+      }
+      // Eliminar duplicados por id
+      const uniqueUsers = users.filter((u, i, arr) => arr.findIndex(x => x.id === u.id) === i);
+      setAllUsers(uniqueUsers);
+    } catch (error) {
+      console.error('Error loading all users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Nuevo: búsqueda global local sobre allUsers
+  const [searchResults, setSearchResults] = useState<UserDto[]>([]);
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const term = searchTerm.toLowerCase();
+    const filtered = allUsers.filter(u =>
+      `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) ||
+      u.email.toLowerCase().includes(term)
+    );
+    setSearchResults(filtered);
+  }, [searchTerm, allUsers]);
+
   const renderCommunity = ({ item }: { item: CommunityResponseDto }) => (
     <TouchableOpacity
       style={styles.communityCard}
@@ -310,7 +356,7 @@ const SearchPeopleScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Buscar Personas</Text>
+        <Text style={styles.title}>🔍 Buscar personas</Text>
         <TouchableOpacity
           style={styles.contactsButton}
           onPress={() => navigation.navigate('Contacts' as never)}
@@ -319,37 +365,63 @@ const SearchPeopleScreen: React.FC = () => {
           <Text style={styles.contactsButtonText}>Contactos ({contacts.length})</Text>
         </TouchableOpacity>
       </View>
-
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Buscar comunidades..."
+          placeholder="Buscar por nombre o email..."
           value={searchTerm}
           onChangeText={setSearchTerm}
-          onSubmitEditing={searchCommunities}
-          placeholderTextColor="#999"
+          autoCorrect={false}
+          autoCapitalize="none"
+          returnKeyType="search"
         />
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={searchCommunities}
-          disabled={searching}
-        >
-          {searching ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Ionicons name="search" size={20} color="#fff" />
-          )}
-        </TouchableOpacity>
+        {searching && <ActivityIndicator size="small" color="#2196F3" style={{ marginLeft: 8 }} />}
       </View>
-
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2196F3" />
-          <Text style={styles.loadingText}>Cargando comunidades...</Text>
-        </View>
+      {searchTerm.trim() ? (
+        <FlatList
+          data={searchResults}
+          keyExtractor={item => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.userCard} onPress={() => startChat(item)}>
+              <View style={styles.avatarContainer}>
+                <AvatarPlaceholder name={`${item.firstName} ${item.lastName}`} size={40} />
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.userName}>{item.firstName} {item.lastName}</Text>
+                <Text style={styles.userEmail}>{item.email}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => addToContacts(item)}
+                disabled={isContactAdded(item.id)}
+              >
+                <Ionicons name={isContactAdded(item.id) ? 'checkmark-circle' : 'person-add'} size={24} color={isContactAdded(item.id) ? 'green' : '#2196F3'} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No se encontraron personas.</Text>
+            </View>
+          )}
+        />
       ) : (
+        // Si no hay búsqueda, mostrar comunidades y contactos como antes
         renderSearchResults()
       )}
+      <TouchableOpacity
+        style={{ backgroundColor: '#2196F3', padding: 12, borderRadius: 8, margin: 16 }}
+        onPress={async () => {
+          try {
+            const chat = await chatService.startChat(2, 5); // IDs de prueba
+            Alert.alert('Chat de prueba creado', `ID del chat: ${chat.id}`);
+          } catch (error: any) {
+            Alert.alert('Error al crear chat de prueba', error?.message || 'Error desconocido');
+          }
+        }}
+      >
+        <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>Crear chat de prueba</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -600,6 +672,48 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginVertical: 4,
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatarContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#2196F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 2,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyText: {
+    fontSize: 16,
     color: '#666',
     textAlign: 'center',
     paddingHorizontal: 32,

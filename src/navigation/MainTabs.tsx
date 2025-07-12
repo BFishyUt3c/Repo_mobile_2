@@ -32,7 +32,7 @@ const ProductStack = () => (
     <Stack.Screen 
       name="ProductList" 
       component={ProductListScreen}
-      options={{ title: 'Productos' }}
+      options={{ title: 'Productos', headerShown: false }} // Ocultar header
     />
     <Stack.Screen 
       name="ProductDetail" 
@@ -58,7 +58,7 @@ const PostsStack = () => (
     <Stack.Screen 
       name="PostsList" 
       component={PostsScreen}
-      options={{ title: 'Posts' }}
+      options={{ title: 'Posts', headerShown: false }} // Ocultar header
     />
     <Stack.Screen 
       name="CreatePost" 
@@ -74,7 +74,7 @@ const CommunityStack = () => (
     <Stack.Screen 
       name="CommunityList" 
       component={CommunityScreen}
-      options={{ title: 'Comunidades' }}
+      options={{ title: 'Comunidades', headerShown: false }} // Ocultar header
     />
     <Stack.Screen 
       name="CommunityDetail" 
@@ -95,7 +95,7 @@ const ChatStack = () => (
     <Stack.Screen 
       name="ChatList" 
       component={ChatListScreen}
-      options={{ title: 'Chats' }}
+      options={{ title: 'Chats', headerShown: false }} // Ocultar header
     />
     <Stack.Screen 
       name="ChatDetail" 
@@ -128,10 +128,29 @@ const MainTabs = () => {
             iconName = 'help-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={26} color={color} style={{ marginBottom: -2 }} />;
         },
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: '#1976D2',
+        tabBarInactiveTintColor: '#B0BEC5',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginBottom: 2,
+        },
+        tabBarStyle: {
+          height: 62,
+          marginBottom: 12, // Separación visual del borde inferior
+          paddingBottom: 10, // Espacio interno, no agranda la barra
+          paddingTop: 4,
+          borderTopLeftRadius: 18,
+          borderTopRightRadius: 18,
+          backgroundColor: '#fff',
+          shadowColor: '#000',
+          shadowOpacity: 0.08,
+          shadowOffset: { width: 0, height: -2 },
+          shadowRadius: 8,
+          elevation: 8,
+        },
         headerShown: false,
       })}
     >

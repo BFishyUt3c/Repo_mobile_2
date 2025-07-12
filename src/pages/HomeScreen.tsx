@@ -16,6 +16,7 @@ import RecentActivityList from '../components/RecentActivityList';
 import { getDashboardStats, getRecentActivity } from '../services/homeService';
 import { DashboardStatsDto } from '../types/DashboardStatsDto';
 import { RecentActivityDto } from '../types/RecentActivityDto';
+import { Ionicons } from '@expo/vector-icons';
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -118,156 +119,60 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>🏠 Dashboard</Text>
-          <Text style={styles.subtitle}>Bienvenido a GreenLoop</Text>
-        </View>
-
-        {/* Estadísticas Principales */}
-        {stats && (
-          <View style={styles.statsContainer}>
-            <Text style={styles.sectionTitle}>📊 Estadísticas Generales</Text>
-            <View style={styles.statsGrid}>
-              <TouchableOpacity onPress={() => handleStatPress('products')}>
-                <StatCard
-                  title="Productos"
-                  value={formatNumber(stats.totalProducts)}
-                  icon="📦"
-                  color="#2196F3"
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity onPress={() => handleStatPress('exchanges')}>
-                <StatCard
-                  title="Intercambios"
-                  value={formatNumber(stats.totalExchanges)}
-                  icon="🔄"
-                  color="#4CAF50"
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity onPress={() => handleStatPress('donations')}>
-                <StatCard
-                  title="Donaciones"
-                  value={formatNumber(stats.totalDonations)}
-                  icon="🎁"
-                  color="#FF9800"
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity onPress={() => handleStatPress('communities')}>
-                <StatCard
-                  title="Comunidades"
-                  value={formatNumber(stats.totalCommunities)}
-                  icon="👥"
-                  color="#9C27B0"
-                />
-              </TouchableOpacity>
+      <View style={styles.headerHome}>
+        <Text style={styles.homeTitle}>Inicio</Text>
+      </View>
+      {/* Impacto Ambiental */}
+      {stats && (
+        <View style={styles.impactContainer}>
+          <View style={styles.impactCard}>
+            <View style={styles.impactRow}>
+              <Text style={styles.impactLabel}>Residuos Evitados:</Text>
+              <Text style={styles.impactValue}>{formatNumber(stats.wasteAvoided)} kg</Text>
             </View>
-          </View>
-        )}
-
-        {/* Impacto Ambiental */}
-        {stats && (
-          <View style={styles.impactContainer}>
-            <Text style={styles.sectionTitle}>🌱 Impacto Ambiental</Text>
-            <View style={styles.impactCard}>
-              <View style={styles.impactRow}>
-                <Text style={styles.impactLabel}>Residuos Evitados:</Text>
-                <Text style={styles.impactValue}>{formatNumber(stats.wasteAvoided)} kg</Text>
-              </View>
-              <View style={styles.impactRow}>
-                <Text style={styles.impactLabel}>CO₂ Ahorrado:</Text>
-                <Text style={styles.impactValue}>{formatNumber(wasteImpact.co2Saved)} kg</Text>
-              </View>
-              <View style={styles.impactRow}>
-                <Text style={styles.impactLabel}>Equivalente a Árboles:</Text>
-                <Text style={styles.impactValue}>{wasteImpact.treesEquivalent} árboles</Text>
-              </View>
+            <View style={styles.impactRow}>
+              <Text style={styles.impactLabel}>CO₂ Ahorrado:</Text>
+              <Text style={styles.impactValue}>{formatNumber(wasteImpact.co2Saved)} kg</Text>
             </View>
-          </View>
-        )}
-
-        {/* Crecimiento */}
-        {stats && (
-          <View style={styles.growthContainer}>
-            <Text style={styles.sectionTitle}>📈 Crecimiento</Text>
-            <View style={styles.growthCard}>
-              <View style={styles.growthRow}>
-                <Text style={styles.growthLabel}>Crecimiento General:</Text>
-                <Text style={[styles.growthValue, { color: stats.growthPercentage >= 0 ? '#4CAF50' : '#F44336' }]}>
-                  {stats.growthPercentage >= 0 ? '+' : ''}{stats.growthPercentage}%
-                </Text>
-              </View>
-              <View style={styles.growthRow}>
-                <Text style={styles.growthLabel}>Usuarios Activos:</Text>
-                <Text style={styles.growthValue}>{formatNumber(stats.activeUsers)}</Text>
-              </View>
-              <View style={styles.growthRow}>
-                <Text style={styles.growthLabel}>Total Usuarios:</Text>
-                <Text style={styles.growthValue}>{formatNumber(stats.totalUsers)}</Text>
-              </View>
+            <View style={styles.impactRow}>
+              <Text style={styles.impactLabel}>Equivalente a Árboles:</Text>
+              <Text style={styles.impactValue}>{wasteImpact.treesEquivalent} árboles</Text>
             </View>
-          </View>
-        )}
-
-        {/* Actividad Reciente */}
-        <View style={styles.activityContainer}>
-          <Text style={styles.sectionTitle}>🕒 Actividad Reciente</Text>
-          {recentActivity.length > 0 ? (
-            <RecentActivityList data={recentActivity} />
-          ) : (
-            <View style={styles.emptyActivity}>
-              <Text style={styles.emptyActivityText}>📝 No hay actividad reciente</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Acciones Rápidas */}
-        <View style={styles.quickActionsContainer}>
-          <Text style={styles.sectionTitle}>⚡ Acciones Rápidas</Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity 
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate({ name: 'Products', params: undefined })}
-            >
-              <Text style={styles.quickActionIcon}>📦</Text>
-              <Text style={styles.quickActionText}>Crear Producto</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate({ name: 'Exchanges', params: undefined })}
-            >
-              <Text style={styles.quickActionIcon}>🔄</Text>
-              <Text style={styles.quickActionText}>Crear Intercambio</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate({ name: 'Communities', params: undefined })}
-            >
-              <Text style={styles.quickActionIcon}>👥</Text>
-              <Text style={styles.quickActionText}>Crear Comunidad</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate({ name: 'Profile', params: undefined })}
-            >
-              <Text style={styles.quickActionIcon}>🎁</Text>
-              <Text style={styles.quickActionText}>Crear Donación</Text>
-            </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+      )}
+      {/* Crecimiento */}
+      {stats && (
+        <View style={styles.growthContainer}>
+          <View style={styles.growthCard}>
+            <View style={styles.growthRow}>
+              <Text style={styles.growthLabel}>Crecimiento General:</Text>
+              <Text style={[styles.growthValue, { color: stats.growthPercentage >= 0 ? '#4CAF50' : '#F44336' }]}> {stats.growthPercentage >= 0 ? '+' : ''}{stats.growthPercentage}%</Text>
+            </View>
+            <View style={styles.growthRow}>
+              <Text style={styles.growthLabel}>Usuarios Activos:</Text>
+              <Text style={styles.growthValue}>{formatNumber(stats.activeUsers)}</Text>
+            </View>
+            <View style={styles.growthRow}>
+              <Text style={styles.growthLabel}>Total Usuarios:</Text>
+              <Text style={styles.growthValue}>{formatNumber(stats.totalUsers)}</Text>
+            </View>
+          </View>
+        </View>
+      )}
+      {/* Actividad Reciente */}
+      <View style={styles.activityContainer}>
+        <Text style={styles.sectionTitle}>🕒 Actividad Reciente</Text>
+        {recentActivity.length > 0 ? (
+          <RecentActivityList data={recentActivity} />
+        ) : (
+          <View style={styles.emptyActivity}>
+            <Text style={styles.emptyActivityText}>📝 No hay actividad reciente</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Eliminar completamente el bloque de Acciones Rápidas (quickActionsContainer y quickActionsGrid) del render. */}
     </SafeAreaView>
   );
 };
@@ -389,16 +294,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
   },
-  quickActionsContainer: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
   quickActionButton: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -454,6 +349,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
+  headerHome: { alignItems: 'center', marginTop: 24, marginBottom: 8 },
+  homeTitle: { fontSize: 32, fontWeight: 'bold', color: '#2196F3' },
 });
 
 export default HomeScreen;

@@ -140,8 +140,7 @@ const CommunityScreen: React.FC = () => {
   };
 
   const handleCommunityPress = (community: CommunitySummaryDto) => {
-    // TODO: Navegar a detalles de la comunidad
-    Alert.alert('Comunidad', `Detalles de ${community.name}`);
+    navigation.navigate('CommunityDetail', { communityId: community.id });
   };
 
   const handleCreateCommunity = () => {

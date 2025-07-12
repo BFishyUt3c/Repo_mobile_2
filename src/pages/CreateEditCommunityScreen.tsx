@@ -90,7 +90,11 @@ const CreateEditCommunityScreen: React.FC = () => {
         });
         Alert.alert('Éxito', 'Comunidad actualizada correctamente');
       } else {
-        await communityService.createCommunity(formData);
+        const data = {
+          ...formData,
+          type: 'PUBLIC', // Forzar siempre pública
+        };
+        await communityService.createCommunity(data);
         Alert.alert('Éxito', 'Comunidad creada correctamente');
       }
       

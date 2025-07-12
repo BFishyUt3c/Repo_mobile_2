@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fontSizes, borderRadius, spacing, shadow, fonts } from '../../styles/theme';
 import { useUser } from '../../hooks/useUser';
 import { donationService } from '../../services/donationService';
+import { wishListService } from '../../services/wishListService';
+import { productService } from '../../services/productService';
 
 const TABS = ['Activas', 'Completadas', 'Canceladas'];
 
@@ -24,6 +26,7 @@ const DonationsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(TABS[0]);
+  const [wishlistIds, setWishlistIds] = useState<number[]>([]); // IDs de productos en wishlist
 
   useEffect(() => {
     const load = async () => {
@@ -32,6 +35,9 @@ const DonationsScreen: React.FC = () => {
       try {
         const data = await donationService.getUserDonations();
         setDonations(data);
+        // Obtener productos en wishlist
+        const wishlistProducts = await productService.getUserWishlist();
+        setWishlistIds(wishlistProducts.map(p => p.productId));
       } catch (e: any) {
         setError('No se pudieron cargar las donaciones');
       } finally {
@@ -40,6 +46,24 @@ const DonationsScreen: React.FC = () => {
     };
     load();
   }, []);
+
+  const handleToggleWishlist = async (productId: number) => {
+    try {
+      let updated;
+      if (wishlistIds.includes(productId)) {
+        await productService.removeFromWishlist(productId);
+        updated = wishlistIds.filter(id => id !== productId);
+        Alert.alert('Wishlist', 'Producto eliminado de tu lista de deseos');
+      } else {
+        await productService.addToWishlist(productId);
+        updated = [...wishlistIds, productId];
+        Alert.alert('Wishlist', 'Producto agregado a tu lista de deseos');
+      }
+      setWishlistIds(updated);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo actualizar la wishlist');
+    }
+  };
 
   if (userLoading || loading) {
     return <ActivityIndicator style={{ flex: 1, marginTop: 60 }} size="large" color={colors.primary} />;
@@ -83,6 +107,17 @@ const DonationsScreen: React.FC = () => {
               <Text style={styles.amount}>{item.pointsAwarded ? `${item.pointsAwarded} puntos` : ''}</Text>
               <Text style={styles.status}>{item.status}</Text>
             </View>
+            {/* Botón wishlist */}
+            <TouchableOpacity
+              style={{ marginLeft: 12 }}
+              onPress={() => handleToggleWishlist(item.id)}
+            >
+              <Ionicons
+                name={wishlistIds.includes(item.id) ? 'heart' : 'heart-outline'}
+                size={28}
+                color={wishlistIds.includes(item.id) ? colors.error : colors.gray}
+              />
+            </TouchableOpacity>
           </View>
         )}
         ListEmptyComponent={<Text style={styles.empty}>No hay donaciones en esta categoría.</Text>}

@@ -17,6 +17,7 @@ import { communityService } from '../services/communityService';
 import { CommunityResponseDto, CommunityType } from '../types/community';
 import { Ionicons } from '@expo/vector-icons';
 import AvatarPlaceholder from '../components/AvatarPlaceholder';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface RouteParams {
   communityId: number;
@@ -43,6 +44,7 @@ const CommunityDetailScreen: React.FC = () => {
   const [isMember, setIsMember] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const loadCommunityData = async () => {
     try {
@@ -61,8 +63,13 @@ const CommunityDetailScreen: React.FC = () => {
       const membershipStatus = await communityService.checkMembership(communityId);
       setIsMember(membershipStatus);
       
-      // Determinar si es el creador (placeholder - usar ID real del usuario)
-      setIsCreator(communityData.creator.id === 1);
+      // Determinar si es el creador
+      if (currentUserId && communityData.creator.id === currentUserId) {
+        setIsCreator(true);
+        setIsMember(true); // Forzar que el creador sea miembro
+      } else {
+        setIsCreator(false);
+      }
       
     } catch (err: any) {
       setError(err.message || 'Error al cargar la comunidad');
@@ -259,6 +266,17 @@ const CommunityDetailScreen: React.FC = () => {
   );
 
   useEffect(() => {
+    // Obtener el ID del usuario actual
+    const fetchUserId = async () => {
+      try {
+        const userStr = await AsyncStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setCurrentUserId(user.id);
+        }
+      } catch {}
+    };
+    fetchUserId();
     loadCommunityData();
   }, [communityId]);
 

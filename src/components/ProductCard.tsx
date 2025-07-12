@@ -7,12 +7,14 @@ interface ProductCardProps {
   product: ProductResponseDto;
   onPress: (product: ProductResponseDto) => void;
   onExchangePress?: (product: ProductResponseDto) => void;
+  onDelete?: (product: ProductResponseDto) => void; // Nuevo
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ 
   product, 
   onPress, 
-  onExchangePress 
+  onExchangePress,
+  onDelete // Nuevo
 }) => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -114,6 +116,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
           >
             <Ionicons name="swap-horizontal-outline" size={16} color="#fff" />
             <Text style={styles.exchangeButtonText}> Intercambiar</Text>
+          </TouchableOpacity>
+        )}
+        {/* Botón eliminar si es del usuario */}
+        {product.belongsToCurrentUser && onDelete && (
+          <TouchableOpacity
+            style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}
+            onPress={(e) => {
+              e.stopPropagation && e.stopPropagation();
+              onDelete(product);
+            }}
+          >
+            <Ionicons name="trash-outline" size={24} color="#F44336" />
           </TouchableOpacity>
         )}
       </View>
